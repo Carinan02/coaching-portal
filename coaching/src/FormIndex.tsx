@@ -1,27 +1,36 @@
-import { EmployeeRepository } from "./data/EmployeeRepository"
-import { useState } from "react";
+//import { EmployeeRepository } from "./data/EmployeeRepository"
+import type { IEmployee } from "./data/Employee";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const employeeRepository = new EmployeeRepository();
+//const employeeRepository = new EmployeeRepository();
 
 export default function FormIndex(){
+
+
+    const [employees, setEmployees]=useState<IEmployee[]>([]);
+
+    useEffect(()=>{
+        async function FetchAll(){
+          
+           const response = await fetch('https://musical-goggles-7v9p6jjj6vgv2x6pp-3000.app.github.dev/api/employees');
+            
+           const data = await response.json();
+           setEmployees(data);
+
+        }
+
+        FetchAll();
+    },[])
     const [selected, setSelected] = useState('');
     const navigate = useNavigate();
-    function handleSubmit() {
+    async function handleSubmit() {
         if (!selected.trim()) {
             alert('No employee selected');
             return;
         }
-
-        const employee = employeeRepository.findOne(selected);
-
-        if (!employee) {
-            alert('Employee not found');
-            setSelected('');
-            return;
-        }
-
-        navigate(`${employee.id}`);
+       const selectedId =  employees.find(e => e.name === selected)?.id;
+       navigate(`${selectedId}`);
     }
     return (
         <div className="flex items-center justify-center w-full min-h-screen bg-slate-50">
@@ -36,7 +45,7 @@ export default function FormIndex(){
                 />
                 <datalist id='employeeRepository'>
                   {
-                    employeeRepository.findAll().map((e)=><option key={e.id} value={e.fullName} />)
+                    employees.map((e)=><option key={e.id} value={e.name} />)
                   }
                    
                 </datalist>
@@ -47,6 +56,7 @@ export default function FormIndex(){
                     Search
                 </button>
             </div>
+           
         </div>
     )
 }

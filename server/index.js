@@ -111,6 +111,82 @@ router.get('/employees/:id', function(req, res){
         })
     
 });
+router.post('/newcoaching', function(req, res) {
+    const payload = req.body;
+
+    db.run(
+        `INSERT INTO cp_coachingMain(cm_framework, cm_code)
+         VALUES(:framework, 'TEMP')`,
+        {
+            ':framework': payload.framework
+        },
+        function(err) {
+
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    error: 'Failed to insert coaching record'
+                });
+            }
+
+            // This is the actual SQLite auto-increment ID
+            const lastInsertID = this.lastID;
+
+            const now = new Date();
+
+            const dateCode =
+                String(now.getMonth() + 1).padStart(2, '0') +
+                String(now.getFullYear()).slice(-2);
+
+            const coachCoade = `COACH-${dateCode}${lastInsertID}`;
+
+            db.run(
+                `UPDATE cp_coachingMain SET
+                    cm_code = :cm_code,
+                    cm_status = :cm_status,
+                    cm_coachtype = :cm_coachtype,
+                    cm_framework = :cm_framework,
+                    cm_relatedto = :cm_relatedto,
+                    cm_coach = :cm_coach,
+                    cm_coachee = :cm_coachee,
+                    cm_coachingDate = :cm_coachingDate,
+                    cm_dateCreated = :cm_dateCreated,
+                    cm_dateAcknowledged = :cm_dateAcknowledged,
+                    cm_dateSignoff = :cm_dateSignoff,
+                    cm_dateClosed = :cm_dateClosed
+                 WHERE cm_id = :lastInsertID`,
+                {
+                    ':cm_code': coachCoade,
+                    ':cm_status': 'Pending Coachee Acknowledgement',
+                    ':cm_coachtype': payload.sessionType,
+                    ':cm_framework': payload.framework,
+                    ':cm_relatedto': '',
+                    ':cm_coach': payload.coach,
+                    ':cm_coachee': payload.coachee,
+                    ':cm_coachingDate': payload.coachDate,
+                    ':cm_dateCreated': payload.date,
+                    ':cm_dateAcknowledged': '',
+                    ':cm_dateSignoff': '',
+                    ':cm_dateClosed': '',
+                    ':lastInsertID': lastInsertID
+                },
+                function(err) {
+
+                    if (err) {
+                        console.error(err);
+                        return res.status(500).json({
+                            error: 'Failed to update coaching record'
+                        });
+                    }
+
+                    res.status(201).json({
+                        code: coachCoade
+                    });
+                }
+            );
+        }
+    );
+});
 
 
 

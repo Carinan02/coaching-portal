@@ -7,13 +7,14 @@ import FormCreate from './FormCreate'
 
 function AppLayout(){
   return(
-    <div className="grid grid-cols-[16rem_1fr] min-h-screen">
+    <div className="grid grid-cols-1 md:grid-cols-[16rem_1fr] min-h-screen">
     <Sidebar/>
     <Outlet />
     </div>
   )
 }
 
+//border hidden bg-gray-800 text-white md:flex flex-col
 const routes = createBrowserRouter([
   {element : <AppLayout />, children : [
     {path : '/form', element : <FormIndex />},

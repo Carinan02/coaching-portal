@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useState, type ChangeEvent } from "react";
+import { useState, type ChangeEvent, useRef } from "react";
 import Label from "./components/Label";
 import { frameworks } from "./data/frameworks";
 import type { IsessionType } from "./data/frameworks";
@@ -9,7 +9,9 @@ import { useFrameworkSelection } from "./hooks/useFrameworkSelection";
 export default function FormCreate() {
     const { user } = useParams();
     const employee = useEmployee(Number(user));
-
+    const coachNameRef = useRef<HTMLInputElement>(null)
+    const today = new Date().toISOString().split("T")[0];
+    const coachDateRef = useRef<HTMLInputElement>(null)
     const {
         sessionType,
         selectedFramework,
@@ -46,30 +48,37 @@ export default function FormCreate() {
         });
     }
 
-    const coachName = "Nico Coach";
-    const today = new Date().toISOString().split("T")[0];
+    const coach = "202200697";
+    
 
-    function handleSubmit() {
+    async function handleSubmit() {
         if (!topic.trim()) {
             alert("Topic is required");
             return;
         }
-
+        const coachee = employee?.employeeID;
+        const coachDate = coachDateRef.current?.value;
         const payload = {
             sessionType,
             framework: selectedFramework,
-            coachName,
+            coach,
             date: today,
+            coachDate,
             topic,
+            coachee,
             files: files ? Array.from(files) : [],
             steps: currentFramework.map((step, i) => ({
                 title: step.t,
                 answer: currentAnswers[i] ?? ""
             }))
         };
-
+        const API_BASE = "https://musical-goggles-7v9p6jjj6vgv2x6pp-3000.app.github.dev/api";
         console.log("Submitting:", payload);
-        // fetch(`${API_BASE}/sessions`, { method: "POST", body: JSON.stringify(payload) })
+            
+        const res = await fetch(`${API_BASE}/newcoaching`, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) })
+        const response = await res.json()
+        alert(response.ok)
+    
     }
 
     return (
@@ -133,9 +142,10 @@ export default function FormCreate() {
                             <Label htmlFor="coachName">Coach name</Label>
                             <input
                                 type="text"
+                                ref={coachNameRef}
                                 id="coachName"
                                 className="w-full border border-gray-300 rounded-md p-2 text-sm"
-                                value={coachName}
+                                defaultValue="Nico Coach"
                                 readOnly
                             />
                         </div>
@@ -145,9 +155,10 @@ export default function FormCreate() {
                             <input
                                 type="date"
                                 id="currentDate"
-                                value={today}
+                                defaultValue={today}
+                                ref = {coachDateRef}
                                 className="w-full border border-gray-300 rounded-md p-2 text-sm"
-                                readOnly
+                
                             />
                         </div>
                     </div>
